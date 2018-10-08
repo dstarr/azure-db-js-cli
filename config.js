@@ -2,8 +2,8 @@ const uuid = require('uuid/v4');
 
 let config = {};
 
-config.endpoint = "https://cli-test.documents.azure.com:443/";
-config.primaryKey = "qr1g4JbcrWv7Cc6oreNPWGyaHc4F6hnGAyfJSofbZ2sQz99RDM6kimKRkldPwFqjP9nedf8brxnHvh5Jw6qOYw==";
+config.endpoint = "https://<prefix>.documents.azure.com:443/";
+config.primaryKey = "<my primary key>";
 
 config.database = {
   "id": "cli-test"
@@ -17,7 +17,7 @@ config.documents =
   [
     {
       "id": String(uuid()),
-      "description": "Pick up kiwi fruit.",
+      "description": "Pick up a coconut.",
       "isComplete": "false"
     },
     {
