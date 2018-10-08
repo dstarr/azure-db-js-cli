@@ -17,15 +17,11 @@ config.documents =
   [
     {
       "id": String(uuid()),
-      "category": "personal",
-      "name": "groceries",
       "description": "Pick up kiwi fruit.",
       "isComplete": "false"
     },
     {
       "id": String(uuid()),
-      "category": "personal",
-      "name": "groceries",
       "description": "Pick up kiwi fruit.",
       "isComplete": "false"
     }
