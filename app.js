@@ -14,6 +14,7 @@ const containerId = config.container.id;
 // This means designing for eventual consistenty
 addNewDocs()
   .then(() => deleteAllDocs())
+  .then(() => listAll())
   .catch((err) => {
     if (err)
       console.error(err);
@@ -51,5 +52,17 @@ async function deleteAllDocs() {
   items.map(async (doc) => {
     container.item(doc.id).delete(doc);
     console.log(`-------- DELETED ${doc.id}`);
+  });
+}
+
+async function listAll() {
+
+  const {database} = await client.databases.createIfNotExists({id: databaseId});
+  const {container} = await database.containers.createIfNotExists({id: containerId});
+
+  const { result: allDocs } = await container.items.readAll().toArray();
+
+  allDocs.map((doc) => {
+    console.log(`DOC IN DB: ${doc.id}`);
   });
 }
