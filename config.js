@@ -1,30 +1,14 @@
-const uuid = require('uuid/v4');
-
 let config = {};
 
-config.endpoint = "https://<prefix>.documents.azure.com:443/";
-config.primaryKey = "<my primary key>";
+config.endpoint = "YOUR COSMOS URI";
+config.primaryKey = "YOUR TENANT ID";
 
 config.database = {
-  "id": "cli-test"
+  "id": "YOUR COSMOS DB NAME"
 };
 
 config.container = {
-  "id": "items"
+  "id": "YOUR CONTAINER NAME"
 };
-
-config.documents =
-  [
-    {
-      "id": String(uuid()),
-      "description": "Pick up a coconut.",
-      "isComplete": "false"
-    },
-    {
-      "id": String(uuid()),
-      "description": "Pick up kiwi fruit.",
-      "isComplete": "false"
-    }
-  ];
 
 module.exports = config;

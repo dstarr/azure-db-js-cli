@@ -1,20 +1,19 @@
-const config = require("./config");
 const CosmosClient = require("@azure/cosmos").CosmosClient;
-
+const config = require("./config");
+const uuid = require('uuid');
 const masterKey = config.primaryKey;
-
-const client = new CosmosClient({endpoint: config.endpoint, auth: {masterKey: masterKey}});
 
 const databaseId = config.database.id;
 const containerId = config.container.id;
 
-// The addNewDocs executes on it's own thread so quickly the deleteAllDocs
-// runs before before insert completes.
-// This means the delete doesn't typically actually delete all the docs.
-// This means designing for eventual consistenty
+const client = new CosmosClient({endpoint: config.endpoint, auth: {masterKey: masterKey}});
+
+let docId = null;
+
 addNewDocs()
   .then(() => deleteAllDocs())
-  .then(() => listAll())
+  .then(() => addOneDoc())
+  .then(() => fetchOneDoc())
   .catch((err) => {
     if (err)
       console.error(err);
@@ -22,21 +21,43 @@ addNewDocs()
 
 async function addNewDocs() {
 
-  config.documents.forEach((doc) => {
-    addItem((doc))
-      .catch((err => {
-        console.error(err);
-      }));
+  const {database} = await client.databases.createIfNotExists({id: databaseId});
+  const {container} = await database.containers.createIfNotExists({id: containerId});
 
-    console.log(`-------- INSERTED ${doc.id}`);
-  });
+  const p = [];
+
+  console.log("INSERTING 100 DOCS");
+  for (i = 0; i < 100; i++) {
+
+    const id = uuid();
+    let doc = {id: id, content: `The id of this document is: ${id}`};
+    p.push(container.items.create(doc));
+  }
+
+  await Promise.all(p);
+  console.log("DONE INSERTING 100 DOCS");
 }
 
-async function addItem(item) {
+async function addOneDoc() {
+
+  docId = uuid();
+
+  const doc = {
+    id: docId,
+    content: "Would that I had another lifetime to spend with her."
+  };
+
+  await addSingleDoc(doc);
+
+}
+
+async function addSingleDoc(doc) {
 
   const {database} = await client.databases.createIfNotExists({id: databaseId});
   const {container} = await database.containers.createIfNotExists({id: containerId});
-  await container.items.create(item);
+
+  console.log("ADDING: " + doc.id);
+  await container.items.create(doc);
 }
 
 async function deleteAllDocs() {
@@ -45,24 +66,34 @@ async function deleteAllDocs() {
 
   const {database} = await client.databases.createIfNotExists({id: databaseId});
   const {container} = await database.containers.createIfNotExists({id: containerId});
-  const {result: items} = await container.items.query(queryString).toArray();
+  const {result: docs} = await container.items.query(queryString).toArray();
 
-  console.log('TOTAL ITEMS RETURNED: ' + items.length);
+  console.log(`DELETING: ${docs.length} DOCS`);
 
-  items.map(async (doc) => {
+  let cnt = 0;
+
+  docs.map(async (doc) => {
+    cnt++;
     container.item(doc.id).delete(doc);
-    console.log(`-------- DELETED ${doc.id}`);
   });
+
+  console.log(`DELETED: ${cnt} DOCS`);
+
 }
 
-async function listAll() {
+async function fetchOneDoc() {
+
+  console.log(`FETCHING: ${docId}`);
+
+  const query = `select * from i where i.id = '${docId}'`;
 
   const {database} = await client.databases.createIfNotExists({id: databaseId});
   const {container} = await database.containers.createIfNotExists({id: containerId});
+  const {result: docs} = await container.items.query(query).toArray();
 
-  const { result: allDocs } = await container.items.readAll().toArray();
-
-  allDocs.map((doc) => {
-    console.log(`DOC IN DB: ${doc.id}`);
-  });
+  if (docs.length !== 1)
+    console.error(`GOT ${docs.length} BACK`);
+  else
+    console.log(`RECEIVED: ${docId}`);
 }
+
