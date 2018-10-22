@@ -13,40 +13,11 @@ let docId = null;
 addNewDocs()
   .then(() => deleteAllDocs())
   .then(() => addOneDoc())
-  .then(() => fetchOneDocument())
+  .then(() => fetchOneDoc())
   .catch((err) => {
     if (err)
       console.error(err);
   });
-
-async function fetchOneDocument() {
-
-  console.log(`FETCHING: ${docId}`);
-
-  const query = `select * from i where i.id = '${docId}'`;
-
-  const {database} = await client.databases.createIfNotExists({id: databaseId});
-  const {container} = await database.containers.createIfNotExists({id: containerId});
-  const {result: items} = await container.items.query(query).toArray();
-
-  if (items.length !== 1)
-    console.error(`GOT ${items.length} BACK`);
-  else
-    console.log(`RECEIVED: ${docId}`);
-}
-
-async function addOneDoc() {
-
-  docId = uuid();
-
-  const doc = {
-    id: docId,
-    content: "Would that I had another lifetime to spend with her."
-  };
-
-  await addItem(doc);
-
-}
 
 async function addNewDocs() {
 
@@ -67,13 +38,26 @@ async function addNewDocs() {
   console.log("DONE INSERTING 100 DOCS");
 }
 
-async function addItem(item) {
+async function addOneDoc() {
+
+  docId = uuid();
+
+  const doc = {
+    id: docId,
+    content: "Would that I had another lifetime to spend with her."
+  };
+
+  await addSingleDoc(doc);
+
+}
+
+async function addSingleDoc(doc) {
 
   const {database} = await client.databases.createIfNotExists({id: databaseId});
   const {container} = await database.containers.createIfNotExists({id: containerId});
 
-  console.log("ADDING: " + item.id);
-  await container.items.create(item);
+  console.log("ADDING: " + doc.id);
+  await container.items.create(doc);
 }
 
 async function deleteAllDocs() {
@@ -82,18 +66,34 @@ async function deleteAllDocs() {
 
   const {database} = await client.databases.createIfNotExists({id: databaseId});
   const {container} = await database.containers.createIfNotExists({id: containerId});
-  const {result: items} = await container.items.query(queryString).toArray();
+  const {result: docs} = await container.items.query(queryString).toArray();
 
-  console.log(`DELETING: ${items.length} DOCS`);
+  console.log(`DELETING: ${docs.length} DOCS`);
 
   let cnt = 0;
 
-  items.map(async (doc) => {
+  docs.map(async (doc) => {
     cnt++;
     container.item(doc.id).delete(doc);
   });
 
   console.log(`DELETED: ${cnt} DOCS`);
 
+}
+
+async function fetchOneDoc() {
+
+  console.log(`FETCHING: ${docId}`);
+
+  const query = `select * from i where i.id = '${docId}'`;
+
+  const {database} = await client.databases.createIfNotExists({id: databaseId});
+  const {container} = await database.containers.createIfNotExists({id: containerId});
+  const {result: docs} = await container.items.query(query).toArray();
+
+  if (docs.length !== 1)
+    console.error(`GOT ${docs.length} BACK`);
+  else
+    console.log(`RECEIVED: ${docId}`);
 }
 
