@@ -10,11 +10,8 @@ const client = new CosmosClient({endpoint: config.endpoint, auth: {masterKey: ma
 
 let docId = null;
 
-// The addNewDocs executes on it's own thread so quickly the deleteAllDocs
-// This means designing for eventual consistenty
 addNewDocs()
-  //.then(() => listAll())
-  //.then(() => deleteAllDocs())
+  .then(() => deleteAllDocs())
   .then(() => addOneDoc())
   .then(() => fetchOneDocument())
   .catch((err) => {
@@ -38,14 +35,13 @@ async function fetchOneDocument() {
     console.log(`RECEIVED: ${docId}`);
 }
 
-// This means the delete doesn't typically actually delete all the docs.
 async function addOneDoc() {
 
   docId = uuid();
 
   const doc = {
     id: docId,
-    content: "Would that I had another lifetime to spend with her in love."
+    content: "Would that I had another lifetime to spend with her."
   };
 
   await addItem(doc);
@@ -69,8 +65,6 @@ async function addNewDocs() {
 
   await Promise.all(p);
   console.log("DONE INSERTING 100 DOCS");
-
-
 }
 
 async function addItem(item) {
@@ -90,24 +84,16 @@ async function deleteAllDocs() {
   const {container} = await database.containers.createIfNotExists({id: containerId});
   const {result: items} = await container.items.query(queryString).toArray();
 
-  console.log('TOTAL ITEMS RETURNED: ' + items.length);
+  console.log(`DELETING: ${items.length} DOCS`);
+
+  let cnt = 0;
 
   items.map(async (doc) => {
+    cnt++;
     container.item(doc.id).delete(doc);
-    console.log(`-------- DELETED ${doc.id}`);
   });
+
+  console.log(`DELETED: ${cnt} DOCS`);
+
 }
-
-async function listAll() {
-
-  const {database} = await client.databases.createIfNotExists({id: databaseId});
-  const {container} = await database.containers.createIfNotExists({id: containerId});
-
-  const {result: allDocs} = await container.items.readAll().toArray();
-
-  allDocs.map((doc) => {
-    console.log(`DOC IN DB: ${doc.id}`);
-  });
-}
-
 

@@ -1,16 +1,14 @@
-const uuid = require('uuid/v4');
-
 let config = {};
 
-config.endpoint = "https://cli-test.documents.azure.com:443/";
-config.primaryKey = "qr1g4JbcrWv7Cc6oreNPWGyaHc4F6hnGAyfJSofbZ2sQz99RDM6kimKRkldPwFqjP9nedf8brxnHvh5Jw6qOYw==";
+config.endpoint = "YOUR COSMOS URI";
+config.primaryKey = "YOUR TENANT ID";
 
 config.database = {
-  "id": "cli-test"
+  "id": "YOUR COSMOS DB NAME"
 };
 
 config.container = {
-  "id": "items"
+  "id": "YOUR CONTAINER NAME"
 };
 
 module.exports = config;
