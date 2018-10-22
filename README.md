@@ -1,7 +1,7 @@
-# cosmos-cli-js
+# cosmos-js-cli
 
-Illustrates eventual consistency of cosmos db.
+This small application illustrates several operations for workings  
 
-Usses JS API v2
+Uses `@azure/cosmos`, version 2 of the CosmosAPI.
 
-`node app.s`
+Clone the repo, install dependencies (`npm i`) and then run the app with `node app`. You should be using node 8 or above.
