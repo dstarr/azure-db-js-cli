@@ -4,14 +4,13 @@
   "private": true,
   "dependencies": {
     "@azure/cosmos": "^2.0.1",
-    "documentdb": "^1.14.5",
+    "azure-storage": "^2.10.2",
     "react": "^16.5.2",
     "react-dom": "^16.5.2",
     "react-scripts": "1.1.5",
-    "thread-sleep": "^2.1.0",
     "uuid": "^3.3.2"
   },
   "scripts": {
-    "start": "node app.js"
+    "start": "echo 'not implemented. Call direclt to app in the desired directory.'"
   }
 }
