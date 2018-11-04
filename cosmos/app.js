@@ -1,9 +1,9 @@
 const CosmosClient = require("@azure/cosmos").CosmosClient;
 const config = require("./config");
 const uuid = require('uuid');
-const masterKey = config.primaryKey;
+const masterKey = config.accessKey;
 
-const databaseId = config.database.id;
+const databaseId = config.db.id;
 const containerId = config.container.id;
 
 const client = new CosmosClient({endpoint: config.endpoint, auth: {masterKey: masterKey}});

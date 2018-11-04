@@ -23,3 +23,5 @@ yarn-error.log*
 .idea/inspectionProfiles/
 .idea/workspace.xml
 config_sample.js
+/cosmos/config.js
+/tableStorage/config.js
