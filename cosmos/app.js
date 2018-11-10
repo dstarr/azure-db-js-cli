@@ -1,46 +1,47 @@
 const CosmosClient = require("@azure/cosmos").CosmosClient;
 const config = require("./config");
 const uuid = require('uuid');
-const masterKey = config.accessKey;
 
-const databaseId = config.db.id;
-const containerId = config.container.id;
+const masterKey = config.db.primaryKey;
+const client = new CosmosClient({endpoint: config.db.uri, auth: {masterKey: masterKey}});
 
-const client = new CosmosClient({endpoint: config.endpoint, auth: {masterKey: masterKey}});
+let db;
 
-let docId = null;
-
-addNewDocs()
-  .then(() => deleteAllDocs())
+setDatabase()
   .then(() => addOneDoc())
-  .then(() => fetchOneDoc())
+  .then(() => deleteAllDocs())
+  .then(() => addNewDocs(50))
+  .then(() => deleteAllDocs())
+
   .catch((err) => {
     if (err)
       console.error(err);
   });
 
-async function addNewDocs() {
+const containerId = config.container.id;
 
-  const {database} = await client.databases.createIfNotExists({id: databaseId});
-  const {container} = await database.containers.createIfNotExists({id: containerId});
+async function addNewDocs(num) {
 
   const p = [];
 
-  console.log("INSERTING 100 DOCS");
-  for (i = 0; i < 100; i++) {
+  console.log(`INSERTING ${num} DOCS`);
+  for (let i = 0; i < num; i++) {
 
     const id = uuid();
-    let doc = {id: id, content: `The id of this document is: ${id}`};
-    p.push(container.items.create(doc));
+    const doc = {id: id, content: `The id of this document is: ${id}`};
+
+    p.push(db.container(containerId).items.create(doc));
+
   }
 
   await Promise.all(p);
-  console.log("DONE INSERTING 100 DOCS");
+
+  console.log(`DONE INSERTING ${num} DOCS`);
 }
 
 async function addOneDoc() {
 
-  docId = uuid();
+  const docId = uuid();
 
   const doc = {
     id: docId,
@@ -53,8 +54,8 @@ async function addOneDoc() {
 
 async function addSingleDoc(doc) {
 
-  const {database} = await client.databases.createIfNotExists({id: databaseId});
-  const {container} = await database.containers.createIfNotExists({id: containerId});
+  //const {database} = await client.databases.createIfNotExists({id: databaseId});
+  const {container} = await db.containers.createIfNotExists({id: containerId});
 
   console.log("ADDING: " + doc.id);
   await container.items.create(doc);
@@ -62,38 +63,38 @@ async function addSingleDoc(doc) {
 
 async function deleteAllDocs() {
 
-  const queryString = 'select * from items i where i.id != ""';
+  const queryString = `select * from items`;
+  const container = db.container(containerId);
 
-  const {database} = await client.databases.createIfNotExists({id: databaseId});
-  const {container} = await database.containers.createIfNotExists({id: containerId});
-  const {result: docs} = await container.items.query(queryString).toArray();
+  try {
 
-  console.log(`DELETING: ${docs.length} DOCS`);
+    let {result: items} = await container.items.query(queryString).toArray();
 
-  let cnt = 0;
+    for (let i = 0; i < items.length; i++) {
 
-  docs.map(async (doc) => {
-    cnt++;
-    container.item(doc.id).delete(doc);
-  });
+      const deleteResponse = await container.item(items[i].id).delete();
+      console.log(`DELETED: ${deleteResponse.item.id}`);
 
-  console.log(`DELETED: ${cnt} DOCS`);
+    }
+
+  } catch (err) {
+    console.error(err)
+  }
+}
+
+async function deleteContainer() {
+
+  const container = db.container(containerId);
+  await container.delete();
 
 }
 
-async function fetchOneDoc() {
+async function setDatabase() {
 
-  console.log(`FETCHING: ${docId}`);
+  const {database} = await client.databases.createIfNotExists({id: config.db.id});
+  db = database;
 
-  const query = `select * from i where i.id = '${docId}'`;
+  console.log(`DATABASE PRESENT`);
 
-  const {database} = await client.databases.createIfNotExists({id: databaseId});
-  const {container} = await database.containers.createIfNotExists({id: containerId});
-  const {result: docs} = await container.items.query(query).toArray();
 
-  if (docs.length !== 1)
-    console.error(`GOT ${docs.length} BACK`);
-  else
-    console.log(`RECEIVED: ${docId}`);
 }
-

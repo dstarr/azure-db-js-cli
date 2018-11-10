@@ -3,20 +3,19 @@ const uuid = require('uuid');
 const config = require('./config');
 
 
-createTable();
-insertEntities(100);
-insertEntitiesWithBatch(100);
-// selectSingleEntity
+// createTable();
+
+// insertEntities(100);
+// insertEntitiesWithBatch(100);
+selectSingleEntity();
 // deleteEntities();
-// deleteDataTable
+// deleteTable();
 
 //==================================
 // Main functions here
 //==================================
 
-function createTable() {
-
-  console.log(`CREATING TABLE: ${config.db.tableName}`);
+function createTable(cb) {
 
   getTableService().createTableIfNotExists(config.db.tableName, (error, result) => {
 
@@ -29,9 +28,9 @@ function createTable() {
       console.log(`CREATED TABLE: ${config.db.tableName}`);
     else
       console.log(`TABLE ALREADY EXISTED: ${config.db.tableName}`);
+  });
 
-
-  })
+  cb();
 }
 
 function insertEntities(num) {
@@ -63,24 +62,91 @@ function insertEntitiesWithBatch(num) {
     batch.insertEntity(makeEntity(), {echoContent: false});
   }
 
-  getTableService().executeBatch('DemoApp', batch, function (error, result, response) {
-    if (!error) {
-      // Batch completed
+  getTableService().executeBatch(config.db.tableName, batch, (error, result, response) => {
+    if (error) {
+      console.error(error);
     }
     else
       console.log('BATCH INSERT COMPLETE');
   });
 }
 
-function selectSingleEntity(){};
+function selectSingleEntity() {
 
-function deleteEntities(){}
+  const entity = makeEntity();
 
-function deleteDataTable() {
-  getTableService().deleteTable(config.db.tableName, function (error, response) {
-    if (error) {
+  //
+  // first, insert an entity to retrieve as we will need its id
+  //
+
+  getTableService().insertEntity(config.db.tableName, entity, (error, response, getEntity) => {
+
+    if (!error) {
+      console.log('INSERTED: ' + entity.RowKey._);
+      getEntity();
+    } else {
       console.error(error);
     }
+
+  });
+
+  //
+  // now select the entity
+  //
+  function getEntity() {
+
+    console.log('getEntity()');
+
+    getTableService().retrieveEntity(config.db.tableName, entity.RowKey._, '1', function (error, result, response) {
+      if (!error) {
+        console.log('RETRIEVED: ' + result.entity);
+      } else {
+        console.error('DID NOT RETRIEVE: ' + entity.RowKey._);
+        //console.error(error);
+      }
+    });
+
+  }
+};
+
+function deleteEntities() {
+
+  console.log("DELETING ENTITIES");
+
+  const query = new azure.TableQuery()
+    .where('PartitionKey eq ?', 'DemoApp');
+
+  // select all entities
+  getTableService().queryEntities(config.db.tableName, query, null, function (error, result, response) {
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    result.entries.forEach(function (entry) {
+
+      getTableService().deleteEntity(config.db.tableName, entry, function (error, response) {
+        if (!error) {
+          console.log('DELETED: ' + entry.RowKey._);
+        }
+        else
+          console.error(error);
+      });
+
+
+    })
+
+  })
+};
+
+function deleteTable() {
+  getTableService().deleteTableIfExists(config.db.tableName, function (error, response) {
+    if (error)
+      console.error(error);
+    else
+      console.log(`DELETED TABLE: ${config.db.tableName}`);
+
   });
 }
 
@@ -98,7 +164,7 @@ function makeEntity() {
   const id = uuid();
 
   return {
-    PartitionKey: {'_': 'DemoApp'},
+    PartitionKey: {'_': config.db.partitionKey},
     RowKey: {'_': id},
     description: {'_': `This is an entity with id ${id}`}
   };
