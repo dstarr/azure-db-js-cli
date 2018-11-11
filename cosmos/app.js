@@ -61,17 +61,21 @@ async function addAndUpdateOneDoc() {
 
 async function deleteAllDocs() {
 
+  const p = [];
+
   const queryString = `select * from items`;
   const container = db.container(containerId);
 
+
   let {result: items} = await container.items.query(queryString).toArray();
+  console.log(`DELETING ${items.length} DOCS`);
 
   for (let i = 0; i < items.length; i++) {
-
-    const deleteResponse = await container.item(items[i].id).delete();
-    console.log(`DELETED: ${deleteResponse.item.id}`);
-
+    p.push(container.item(items[i].id).delete())
   }
+
+  await Promise.all(p);
+  console.log(`DELETED ${items.length} DOCS`);
 }
 
 async function deleteContainer() {
