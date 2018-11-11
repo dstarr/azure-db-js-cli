@@ -8,11 +8,10 @@ const client = new CosmosClient({endpoint: config.db.uri, auth: {masterKey: mast
 let db;
 
 setDatabase()
-  .then(() => addOneDoc())
+  .then(() => addAndUpdateOneDoc())
   .then(() => deleteAllDocs())
   .then(() => addNewDocs(50))
   .then(() => deleteAllDocs())
-
   .catch((err) => {
     if (err)
       console.error(err);
@@ -39,26 +38,25 @@ async function addNewDocs(num) {
   console.log(`DONE INSERTING ${num} DOCS`);
 }
 
-async function addOneDoc() {
+async function addAndUpdateOneDoc() {
 
   const docId = uuid();
 
-  const doc = {
+  let doc = {
     id: docId,
-    content: "Would that I had another lifetime to spend with her."
+    content: "Lorem ipsum"
   };
 
-  await addSingleDoc(doc);
+  const container = db.container(containerId);
 
-}
-
-async function addSingleDoc(doc) {
-
-  //const {database} = await client.databases.createIfNotExists({id: databaseId});
-  const {container} = await db.containers.createIfNotExists({id: containerId});
-
-  console.log("ADDING: " + doc.id);
+  console.log(`ADDING: ${doc.id}`);
   await container.items.create(doc);
+
+  doc.content = "Updated text";
+
+  console.log(`UPDATING: ${doc.id}`);
+  await container.items.upsert(doc);
+
 }
 
 async function deleteAllDocs() {
