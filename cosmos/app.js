@@ -66,19 +66,13 @@ async function deleteAllDocs() {
   const queryString = `select * from items`;
   const container = db.container(containerId);
 
-  try {
+  let {result: items} = await container.items.query(queryString).toArray();
 
-    let {result: items} = await container.items.query(queryString).toArray();
+  for (let i = 0; i < items.length; i++) {
 
-    for (let i = 0; i < items.length; i++) {
+    const deleteResponse = await container.item(items[i].id).delete();
+    console.log(`DELETED: ${deleteResponse.item.id}`);
 
-      const deleteResponse = await container.item(items[i].id).delete();
-      console.log(`DELETED: ${deleteResponse.item.id}`);
-
-    }
-
-  } catch (err) {
-    console.error(err)
   }
 }
 

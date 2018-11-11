@@ -1,14 +1,13 @@
 let config = {};
 
-config.endpoint = "YOUR COSMOS URI";
-config.primaryKey = "YOUR TENANT ID";
-
 config.db = {
-  "id": "YOUR COSMOS DB NAME"
+  id:             '[COSMOS DB NAME]',
+  primaryKey:     '[YOUR DB ACCESS KEY]',
+  uri:            'https://[COSMOS DB NAME].documents.azure.com:443/'
 };
 
 config.container = {
-  "id": "YOUR CONTAINER NAME"
+  id: '[YOUR CONTAINER NAME]'
 };
 
 module.exports = config;
