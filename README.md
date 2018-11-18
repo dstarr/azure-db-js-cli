@@ -1,7 +1,10 @@
 # cosmos-js-cli
 
-This small application illustrates several operations for workings  
+This small application illustrates several operations for working with the Cosmos DB SDK.  Uses `@azure/cosmos`, version 2 of the JavaScript Cosmos DB SDK.
 
-Uses `@azure/cosmos`, version 2 of the CosmosAPI.
+```text
+npm install
+npm run
+```
 
-Clone the repo, install dependencies (`npm i`) and then run the app with `node app`. You should be using node 8 or above.
+Open the app file and see the operation perform explicitly by commenting some `.then` steps out.
